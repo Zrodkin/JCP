@@ -459,8 +459,7 @@ export default function DonationPage() {
           {/* Impact Statement */}
           <div className="mt-8 md:mt-12 text-center px-4">
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-xl mx-auto text-pretty">
-              Every contribution, no matter the size, makes a meaningful difference in the lives of our students and
-              helps us maintain our commitment to creative, inspired learning.
+            
             </p>
           </div>
         </div>
