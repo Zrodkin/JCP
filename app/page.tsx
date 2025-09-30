@@ -20,7 +20,7 @@ import { Loader2, CheckCircle } from "lucide-react"
 // Initialize Stripe - replace with your publishable key
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
-const presetAmounts = [25, 50, 100, 250, 500, 1000]
+const presetAmounts = [500, 770, 1260, 1800, 2600, 5000]
 
 // Checkout form component that handles the actual payment
 function CheckoutForm({ 
