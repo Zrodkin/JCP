@@ -1,3 +1,4 @@
+// /Users/zalmansmac/Desktop/Website Folder/Projects/JCP/donation-site/app/donation/page.tsx
 "use client"
 
 import { useState } from "react"
@@ -54,21 +55,22 @@ function CheckoutForm({
 
     // Confirm the payment - this will redirect to success page
     const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/donation/success`,
-      },
-      redirect: "if_required"
-    })
+  elements,
+  confirmParams: {
+    return_url: `${window.location.origin}/donation/success`,
+  },
+  redirect: "if_required"  // <-- ADD THIS
+})
 
-    if (error) {
-      setMessage(error.message || "An error occurred")
-      onError(error.message || "Payment failed")
-      setIsProcessing(false)
-    } else if (paymentIntent && paymentIntent.status === "succeeded") {
-      onSuccess()
-      setIsProcessing(false)
-    }
+if (error) {
+  setMessage(error.message || "An error occurred")
+  onError(error.message || "Payment failed")
+  setIsProcessing(false)
+} else if (paymentIntent && paymentIntent.status === "succeeded") {  // <-- ADD THIS
+  onSuccess()  // <-- This triggers your in-page success screen
+  setIsProcessing(false)
+}
+    // If no error, the redirect will happen automatically
   }
 
   return (
@@ -85,7 +87,7 @@ function CheckoutForm({
       />
       
       {message && (
-        <div className="p-4 rounded-lg bg-destructive/10 text-destructive text-sm md:text-base">
+        <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
           {message}
         </div>
       )}
@@ -94,11 +96,11 @@ function CheckoutForm({
         type="submit"
         size="lg"
         disabled={!stripe || isProcessing}
-        className="w-full h-14 md:h-14 text-lg md:text-lg font-semibold"
+        className="w-full h-12 md:h-14 text-base md:text-lg font-semibold"
       >
         {isProcessing ? (
           <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Processing...
           </>
         ) : (
@@ -108,7 +110,6 @@ function CheckoutForm({
     </form>
   )
 }
-
 // Main donation page component
 export default function DonationPage() {
   const [donationType, setDonationType] = useState<"one-time" | "monthly">("one-time")
@@ -206,19 +207,19 @@ export default function DonationPage() {
 
   if (paymentStatus === "succeeded") {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-8 text-center">
-            <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-6" />
-            <h2 className="text-3xl font-bold mb-4">Thank You!</h2>
-            <p className="text-lg text-muted-foreground mb-2">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="pt-6 text-center">
+            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Thank You!</h2>
+            <p className="text-muted-foreground mb-4">
               Your donation has been processed successfully.
             </p>
-            <p className="text-base text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               You will receive a receipt via email shortly.
             </p>
             <Button 
-              className="mt-8 w-full h-12 text-base"
+              className="mt-6"
               onClick={() => window.location.reload()}
             >
               Make Another Donation
@@ -231,11 +232,11 @@ export default function DonationPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-5 py-8 md:px-4 md:py-12 lg:py-20">
+      <div className="container mx-auto px-4 py-8 md:py-12 lg:py-20">
         <div className="max-w-2xl mx-auto">
-          {/* Logo - Larger on mobile */}
-          <div className="flex justify-center mb-8 md:mb-8">
-            <div className="relative w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56">
+          {/* Logo */}
+          <div className="flex justify-center mb-6 md:mb-8">
+            <div className="relative w-32 h-32 md:w-48 md:h-48 lg:w-56 lg:h-56">
               <Image
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/JCP_logo-Fe5Lx5jI4aj91bquMhbTw0PavL7RAD.jpg"
                 alt="Jewish Creative Preschool"
@@ -246,12 +247,12 @@ export default function DonationPage() {
             </div>
           </div>
 
-          {/* Header - Improved mobile sizing */}
+          {/* Header */}
           <div className="text-center mb-8 md:mb-12">
-            <h1 className="text-4xl md:text-4xl lg:text-5xl font-serif font-bold text-foreground mb-4 md:mb-4 text-balance">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-foreground mb-3 md:mb-4 text-balance">
               Support Our Community
             </h1>
-            <p className="text-base md:text-lg text-muted-foreground leading-relaxed text-pretty px-2">
+            <p className="hidden md:block text-base md:text-lg text-muted-foreground leading-relaxed text-pretty px-2">
               Your generous donation helps us continue providing a nurturing, Reggio-inspired learning environment for
               our children.
             </p>
@@ -259,19 +260,19 @@ export default function DonationPage() {
 
           {/* Donation Card */}
           <Card className="shadow-lg border-2">
-            <CardHeader className="space-y-4 md:space-y-4 p-5 md:p-6">
-              <CardTitle className="text-2xl md:text-2xl font-serif">
+            <CardHeader className="space-y-3 md:space-y-4 p-4 md:p-6">
+              <CardTitle className="text-xl md:text-2xl font-serif">
                 Make a Donation
               </CardTitle>
-              <CardDescription className="text-base md:text-base">
+              <CardDescription className="text-sm md:text-base">
                 Choose your donation frequency and amount
               </CardDescription>
 
-              {/* Donation Type Toggle - Larger touch targets */}
+              {/* Donation Type Toggle */}
               <div className="flex gap-2 p-1 bg-muted rounded-lg">
                 <button
                   onClick={() => setDonationType("one-time")}
-                  className={`flex-1 py-4 md:py-3 px-4 md:px-4 rounded-md text-base md:text-base font-medium transition-all ${
+                  className={`flex-1 py-2.5 md:py-3 px-3 md:px-4 rounded-md text-sm md:text-base font-medium transition-all ${
                     donationType === "one-time"
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
@@ -281,7 +282,7 @@ export default function DonationPage() {
                 </button>
                 <button
                   onClick={() => setDonationType("monthly")}
-                  className={`flex-1 py-4 md:py-3 px-4 md:px-4 rounded-md text-base md:text-base font-medium transition-all ${
+                  className={`flex-1 py-2.5 md:py-3 px-3 md:px-4 rounded-md text-sm md:text-base font-medium transition-all ${
                     donationType === "monthly"
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
@@ -293,16 +294,16 @@ export default function DonationPage() {
 
               {donationType === "one-time" && (
                 <div className="space-y-2 px-1 md:px-0">
-                  <Label className="text-base font-medium text-muted-foreground">Installment Plan</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">Installment Plan </Label>
                   <Select
                     value={installmentMonths.toString()}
                     onValueChange={(value) => setInstallmentMonths(Number.parseInt(value))}
                   >
-                    <SelectTrigger className="h-14 md:h-12 text-base md:text-base bg-muted border-muted hover:bg-muted/80 transition-colors">
+                    <SelectTrigger className="h-11 md:h-12 text-sm md:text-base bg-muted border-muted hover:bg-muted/80 transition-colors">
                       <SelectValue placeholder="No Installments" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0" className="text-base md:text-base py-3 md:py-3">
+                      <SelectItem value="0" className="text-sm md:text-base py-2 md:py-3">
                         No Installments
                       </SelectItem>
                       {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((months) => {
@@ -311,7 +312,7 @@ export default function DonationPage() {
                           <SelectItem
                             key={months}
                             value={months.toString()}
-                            className="text-base md:text-base py-3 md:py-3"
+                            className="text-sm md:text-base py-2 md:py-3"
                           >
                             {months} monthly payments of ${monthlyAmount}
                           </SelectItem>
@@ -324,23 +325,23 @@ export default function DonationPage() {
 
               {donationType === "monthly" && (
                 <div className="space-y-2 px-1 md:px-0">
-                  <Label className="text-base font-medium text-muted-foreground">Donation Duration</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">Donation Duration</Label>
                   <Select
                     value={monthlyEndDate.toString()}
                     onValueChange={(value) => setMonthlyEndDate(Number.parseInt(value))}
                   >
-                    <SelectTrigger className="h-14 md:h-12 text-base md:text-base bg-muted border-muted hover:bg-muted/80 transition-colors">
+                    <SelectTrigger className="h-11 md:h-12 text-sm md:text-base bg-muted border-muted hover:bg-muted/80 transition-colors">
                       <SelectValue placeholder="No End Date" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0" className="text-base md:text-base py-3 md:py-3">
+                      <SelectItem value="0" className="text-sm md:text-base py-2 md:py-3">
                         No End Date
                       </SelectItem>
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((months) => (
                         <SelectItem
                           key={months}
                           value={months.toString()}
-                          className="text-base md:text-base py-3 md:py-3"
+                          className="text-sm md:text-base py-2 md:py-3"
                         >
                           {months} months
                         </SelectItem>
@@ -351,16 +352,16 @@ export default function DonationPage() {
               )}
             </CardHeader>
 
-            <CardContent className="space-y-6 md:space-y-8 p-5 md:p-6">
-              {/* Preset Amounts - Larger buttons */}
-              <div className="space-y-4 md:space-y-4">
-                <Label className="text-base md:text-base font-medium">Select an amount</Label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-3">
+            <CardContent className="space-y-6 md:space-y-8 p-4 md:p-6">
+              {/* Preset Amounts */}
+              <div className="space-y-3 md:space-y-4">
+                <Label className="text-sm md:text-base font-medium">Select an amount</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                   {presetAmounts.map((amount) => (
                     <button
                       key={amount}
                       onClick={() => handleAmountSelect(amount)}
-                      className={`py-4 md:py-4 px-4 md:px-4 rounded-lg border-2 font-semibold text-lg md:text-lg transition-all ${
+                      className={`py-3 md:py-4 px-3 md:px-4 rounded-lg border-2 font-semibold text-base md:text-lg transition-all ${
                         selectedAmount === amount
                           ? "border-primary bg-primary text-primary-foreground shadow-md scale-105"
                           : "border-border bg-card hover:border-primary/50 hover:bg-muted"
@@ -372,13 +373,13 @@ export default function DonationPage() {
                 </div>
               </div>
 
-              {/* Custom Amount - Larger input */}
-              <div className="space-y-3 md:space-y-3">
-                <Label htmlFor="custom-amount" className="text-base md:text-base font-medium">
+              {/* Custom Amount */}
+              <div className="space-y-2 md:space-y-3">
+                <Label htmlFor="custom-amount" className="text-sm md:text-base font-medium">
                   Or enter a custom amount
                 </Label>
                 <div className="relative">
-                  <span className="absolute left-4 md:left-4 top-1/2 -translate-y-1/2 text-xl md:text-lg font-semibold text-muted-foreground">
+                  <span className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-base md:text-lg font-semibold text-muted-foreground">
                     $
                   </span>
                   <Input
@@ -387,26 +388,26 @@ export default function DonationPage() {
                     placeholder="Enter amount"
                     value={customAmount}
                     onChange={(e) => handleCustomAmountChange(e.target.value)}
-                    className="pl-9 md:pl-8 h-16 md:h-14 text-xl md:text-lg border-2"
+                    className="pl-7 md:pl-8 h-12 md:h-14 text-base md:text-lg border-2"
                     min="1"
                   />
                 </div>
               </div>
 
-              {/* Donation Summary - Larger text */}
+              {/* Donation Summary */}
               {(selectedAmount || customAmount) && (
-                <div className="p-4 md:p-4 bg-muted rounded-lg border border-border space-y-2">
+                <div className="p-3 md:p-4 bg-muted rounded-lg border border-border space-y-2">
                   <div className="flex justify-between items-center gap-2">
-                    <span className="text-base md:text-base text-muted-foreground">
+                    <span className="text-sm md:text-base text-muted-foreground">
                       {donationType === "monthly" ? "Monthly donation" : "One-time donation"}
                     </span>
-                    <span className="text-2xl md:text-2xl font-bold text-foreground">${totalAmount.toFixed(2)}</span>
+                    <span className="text-xl md:text-2xl font-bold text-foreground">${totalAmount.toFixed(2)}</span>
                   </div>
                   {donationType === "one-time" && installmentMonths > 0 && (
                     <div className="pt-2 border-t border-border">
-                      <div className="flex justify-between items-center gap-2 text-sm md:text-sm">
+                      <div className="flex justify-between items-center gap-2 text-xs md:text-sm">
                         <span className="text-muted-foreground">{installmentMonths} monthly payments of</span>
-                        <span className="text-lg md:text-lg font-semibold text-primary whitespace-nowrap">
+                        <span className="text-base md:text-lg font-semibold text-primary whitespace-nowrap">
                           ${monthlyInstallment.toFixed(2)}/mo
                         </span>
                       </div>
@@ -414,9 +415,9 @@ export default function DonationPage() {
                   )}
                   {donationType === "monthly" && monthlyEndDate > 0 && (
                     <div className="pt-2 border-t border-border">
-                      <div className="flex justify-between items-center gap-2 text-sm md:text-sm">
+                      <div className="flex justify-between items-center gap-2 text-xs md:text-sm">
                         <span className="text-muted-foreground">Total over {monthlyEndDate} months</span>
-                        <span className="text-lg md:text-lg font-semibold text-primary whitespace-nowrap">
+                        <span className="text-base md:text-lg font-semibold text-primary whitespace-nowrap">
                           ${(totalAmount * monthlyEndDate).toFixed(2)}
                         </span>
                       </div>
@@ -425,32 +426,32 @@ export default function DonationPage() {
                 </div>
               )}
 
-              {/* Donor Information - Larger inputs */}
+              {/* Donor Information - Always visible when amount is selected */}
               {(selectedAmount || customAmount) && (
                 <div className="space-y-4 border-t pt-6">
-                  <h3 className="text-xl font-semibold">Your Information</h3>
+                  <h3 className="text-lg font-semibold">Your Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="donor-name" className="text-base">Full Name *</Label>
+                      <Label htmlFor="donor-name">Full Name *</Label>
                       <Input
                         id="donor-name"
                         type="text"
                         placeholder=""
                         value={donorName}
                         onChange={(e) => setDonorName(e.target.value)}
-                        className="mt-2 h-14 text-base"
+                        className="mt-1"
                         required
                       />
                     </div>
                     <div>
-                      <Label htmlFor="donor-email" className="text-base">Email Address *</Label>
+                      <Label htmlFor="donor-email">Email Address *</Label>
                       <Input
                         id="donor-email"
                         type="email"
                         placeholder=""
                         value={donorEmail}
                         onChange={(e) => setDonorEmail(e.target.value)}
-                        className="mt-2 h-14 text-base"
+                        className="mt-1"
                         required
                       />
                     </div>
@@ -461,7 +462,7 @@ export default function DonationPage() {
               {/* Payment Section - Appears inline when checkout is started */}
               {checkoutStarted && clientSecret && (
                 <div className="border-t pt-6">
-                  <h3 className="text-xl font-semibold mb-4">Payment Details</h3>
+                  <h3 className="text-lg font-semibold mb-4">Payment Details</h3>
                   <Elements stripe={stripePromise} options={options}>
                     <CheckoutForm
                       amount={totalAmount}
@@ -475,11 +476,11 @@ export default function DonationPage() {
                 </div>
               )}
 
-              {/* Continue to Payment Button - Larger */}
+              {/* Continue to Payment Button */}
               {!checkoutStarted && (selectedAmount || customAmount) && (
                 <Button
                   size="lg"
-                  className="w-full h-16 md:h-14 text-lg md:text-lg font-semibold"
+                  className="w-full h-12 md:h-14 text-base md:text-lg font-semibold"
                   disabled={!donorName.trim() || !donorEmail.trim()}
                   onClick={handleStartCheckout}
                 >
@@ -487,8 +488,8 @@ export default function DonationPage() {
                 </Button>
               )}
 
-              {/* Footer Text - Larger on mobile */}
-              <p className="text-sm md:text-sm text-center text-muted-foreground leading-relaxed px-2">
+              {/* Footer Text */}
+              <p className="text-xs md:text-sm text-center text-muted-foreground leading-relaxed px-2">
                 Your donation is tax-deductible. You will receive a receipt via email for your records.
               </p>
             </CardContent>
@@ -496,7 +497,7 @@ export default function DonationPage() {
 
           {/* Impact Statement */}
           <div className="mt-8 md:mt-12 text-center px-4">
-            <p className="text-base md:text-base text-muted-foreground leading-relaxed max-w-xl mx-auto text-pretty">
+            <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-xl mx-auto text-pretty">
             
             </p>
           </div>
