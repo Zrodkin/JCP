@@ -335,7 +335,7 @@ export default function DonationPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="0" className="text-sm md:text-base py-2 md:py-3">
-                        no end date:
+                        No End Date
                       </SelectItem>
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((months) => (
                         <SelectItem
