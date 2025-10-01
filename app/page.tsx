@@ -59,7 +59,6 @@ function CheckoutForm({
       confirmParams: {
         return_url: `${window.location.origin}/donation/success`,
       },
-      redirect: "if_required"
     })
 
     if (error) {
