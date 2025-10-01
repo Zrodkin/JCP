@@ -166,8 +166,9 @@ async function handleOneTimeDonation(paymentIntent: Stripe.PaymentIntent) {
   // Log the donation, send thank you email, update donor database, etc.
   console.log('One-time donation received:', {
     amount: paymentIntent.amount / 100,
-    customer: paymentIntent.customer,
-    receipt_email: paymentIntent.receipt_email,
+    customer: paymentIntent.customer, // <-- This will now be the Stripe Customer ID
+    receipt_email: paymentIntent.receipt_email, // This will be the customer's email
+    donor_name: paymentIntent.metadata.donor_name // From metadata
   })
   
   // Add your business logic here

@@ -8,24 +8,47 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
-    const { amount, donationType, installmentMonths, monthlyEndDate } = await request.json()
+    const { 
+      amount, 
+      donationType, 
+      installmentMonths, 
+      monthlyEndDate,
+      name,  // <-- Get name from request
+      email  // <-- Get email from request
+    } = await request.json()
 
-    // Validate amount
+    // Validate amount, name, and email
     if (!amount || amount <= 0) {
-      return NextResponse.json(
-        { error: 'Invalid amount' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
+    }
+    if (!name || !email) {
+      return NextResponse.json({ error: 'Name and email are required' }, { status: 400 })
+    }
+
+    // Find an existing customer or create a new one
+    let customer;
+    const existingCustomers = await stripe.customers.list({ email: email, limit: 1 });
+
+    if (existingCustomers.data.length > 0) {
+      customer = existingCustomers.data[0];
+    } else {
+      customer = await stripe.customers.create({
+        name: name,
+        email: email,
+      });
     }
 
     const paymentIntentData: Stripe.PaymentIntentCreateParams = {
       amount: amount, // Amount should already be in cents from frontend
       currency: 'usd',
+      customer: customer.id, // <-- Associate the PaymentIntent with the customer
       automatic_payment_methods: {
         enabled: true,
       },
       metadata: {
         donation_type: donationType,
+        donor_name: name,   // Optional but useful for webhooks
+        donor_email: email, // Optional but useful for webhooks
       }
     }
 

@@ -53,8 +53,8 @@ function CheckoutForm({
     setIsProcessing(true)
     setMessage("")
 
-    // Confirm the payment
-    const { error, paymentIntent } = await stripe.confirmPayment({
+    // Confirm the payment - this will redirect to success page
+    const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/donation/success`,
@@ -66,12 +66,8 @@ function CheckoutForm({
       setMessage(error.message || "An error occurred")
       onError(error.message || "Payment failed")
       setIsProcessing(false)
-    } else if (paymentIntent && paymentIntent.status === "succeeded") {
-      onSuccess()
-      setIsProcessing(false)
-    } else {
-      setIsProcessing(false)
     }
+    // If no error, the redirect will happen automatically
   }
 
   return (
@@ -111,7 +107,6 @@ function CheckoutForm({
     </form>
   )
 }
-
 // Main donation page component
 export default function DonationPage() {
   const [donationType, setDonationType] = useState<"one-time" | "monthly">("one-time")
@@ -121,7 +116,9 @@ export default function DonationPage() {
   const [monthlyEndDate, setMonthlyEndDate] = useState<number>(0)
   const [clientSecret, setClientSecret] = useState("")
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "succeeded" | "failed">("idle")
-  const [showCheckout, setShowCheckout] = useState(false)
+  const [checkoutStarted, setCheckoutStarted] = useState(false)
+  const [donorName, setDonorName] = useState("")
+  const [donorEmail, setDonorEmail] = useState("")
 
   const totalAmount = selectedAmount || Number.parseFloat(customAmount) || 0
   const monthlyInstallment = installmentMonths > 0 ? totalAmount / installmentMonths : 0
@@ -139,7 +136,13 @@ export default function DonationPage() {
   const handleStartCheckout = async () => {
     if (totalAmount <= 0) return
 
-    setShowCheckout(true)
+    // Validate name and email before proceeding
+    if (!donorName.trim() || !donorEmail.trim()) {
+      alert("Please enter your name and email to continue")
+      return
+    }
+
+    setCheckoutStarted(true)
     setPaymentStatus("processing")
 
     try {
@@ -152,6 +155,8 @@ export default function DonationPage() {
           donationType,
           installmentMonths,
           monthlyEndDate,
+          name: donorName,
+          email: donorEmail,
         }),
       })
 
@@ -166,6 +171,7 @@ export default function DonationPage() {
     } catch (error) {
       console.error("Error creating payment intent:", error)
       setPaymentStatus("failed")
+      setCheckoutStarted(false)
     }
   }
 
@@ -253,189 +259,207 @@ export default function DonationPage() {
           <Card className="shadow-lg border-2">
             <CardHeader className="space-y-3 md:space-y-4 p-4 md:p-6">
               <CardTitle className="text-xl md:text-2xl font-serif">
-                {showCheckout ? "Complete Your Donation" : "Make a Donation"}
+                Make a Donation
               </CardTitle>
               <CardDescription className="text-sm md:text-base">
-                {showCheckout ? "Enter your payment details below" : "Choose your donation frequency and amount"}
+                Choose your donation frequency and amount
               </CardDescription>
 
-              {!showCheckout && (
-                <>
-                  {/* Donation Type Toggle */}
-                  <div className="flex gap-2 p-1 bg-muted rounded-lg">
-                    <button
-                      onClick={() => setDonationType("one-time")}
-                      className={`flex-1 py-2.5 md:py-3 px-3 md:px-4 rounded-md text-sm md:text-base font-medium transition-all ${
-                        donationType === "one-time"
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      One-Time
-                    </button>
-                    <button
-                      onClick={() => setDonationType("monthly")}
-                      className={`flex-1 py-2.5 md:py-3 px-3 md:px-4 rounded-md text-sm md:text-base font-medium transition-all ${
-                        donationType === "monthly"
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      Monthly
-                    </button>
-                  </div>
+              {/* Donation Type Toggle */}
+              <div className="flex gap-2 p-1 bg-muted rounded-lg">
+                <button
+                  onClick={() => setDonationType("one-time")}
+                  className={`flex-1 py-2.5 md:py-3 px-3 md:px-4 rounded-md text-sm md:text-base font-medium transition-all ${
+                    donationType === "one-time"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  One-Time
+                </button>
+                <button
+                  onClick={() => setDonationType("monthly")}
+                  className={`flex-1 py-2.5 md:py-3 px-3 md:px-4 rounded-md text-sm md:text-base font-medium transition-all ${
+                    donationType === "monthly"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Monthly
+                </button>
+              </div>
 
-                  {donationType === "one-time" && (
-                    <div className="space-y-2 px-1 md:px-0">
-                      <Label className="text-sm font-medium text-muted-foreground">Installment Plan (Optional)</Label>
-                      <Select
-                        value={installmentMonths.toString()}
-                        onValueChange={(value) => setInstallmentMonths(Number.parseInt(value))}
-                      >
-                        <SelectTrigger className="h-11 md:h-12 text-sm md:text-base bg-muted border-muted hover:bg-muted/80 transition-colors">
-                          <SelectValue placeholder="No Installments" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0" className="text-sm md:text-base py-2 md:py-3">
-                            No Installments
+              {donationType === "one-time" && (
+                <div className="space-y-2 px-1 md:px-0">
+                  <Label className="text-sm font-medium text-muted-foreground">Installment Plan (Optional)</Label>
+                  <Select
+                    value={installmentMonths.toString()}
+                    onValueChange={(value) => setInstallmentMonths(Number.parseInt(value))}
+                  >
+                    <SelectTrigger className="h-11 md:h-12 text-sm md:text-base bg-muted border-muted hover:bg-muted/80 transition-colors">
+                      <SelectValue placeholder="No Installments" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0" className="text-sm md:text-base py-2 md:py-3">
+                        No Installments
+                      </SelectItem>
+                      {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((months) => {
+                        const monthlyAmount = totalAmount > 0 ? (totalAmount / months).toFixed(2) : "0.00"
+                        return (
+                          <SelectItem
+                            key={months}
+                            value={months.toString()}
+                            className="text-sm md:text-base py-2 md:py-3"
+                          >
+                            {months} monthly payments of ${monthlyAmount}
                           </SelectItem>
-                          {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((months) => {
-                            const monthlyAmount = totalAmount > 0 ? (totalAmount / months).toFixed(2) : "0.00"
-                            return (
-                              <SelectItem
-                                key={months}
-                                value={months.toString()}
-                                className="text-sm md:text-base py-2 md:py-3"
-                              >
-                                {months} monthly payments of ${monthlyAmount}
-                              </SelectItem>
-                            )
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
+                        )
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-                  {donationType === "monthly" && (
-                    <div className="space-y-2 px-1 md:px-0">
-                      <Label className="text-sm font-medium text-muted-foreground">Donation Duration (Optional)</Label>
-                      <Select
-                        value={monthlyEndDate.toString()}
-                        onValueChange={(value) => setMonthlyEndDate(Number.parseInt(value))}
-                      >
-                        <SelectTrigger className="h-11 md:h-12 text-sm md:text-base bg-muted border-muted hover:bg-muted/80 transition-colors">
-                          <SelectValue placeholder="No End Date" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0" className="text-sm md:text-base py-2 md:py-3">
-                            No End Date (Ongoing)
-                          </SelectItem>
-                          {[3, 6, 9, 12, 18, 24].map((months) => (
-                            <SelectItem
-                              key={months}
-                              value={months.toString()}
-                              className="text-sm md:text-base py-2 md:py-3"
-                            >
-                              {months} months
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </>
+              {donationType === "monthly" && (
+                <div className="space-y-2 px-1 md:px-0">
+                  <Label className="text-sm font-medium text-muted-foreground">Donation Duration (Optional)</Label>
+                  <Select
+                    value={monthlyEndDate.toString()}
+                    onValueChange={(value) => setMonthlyEndDate(Number.parseInt(value))}
+                  >
+                    <SelectTrigger className="h-11 md:h-12 text-sm md:text-base bg-muted border-muted hover:bg-muted/80 transition-colors">
+                      <SelectValue placeholder="No End Date" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0" className="text-sm md:text-base py-2 md:py-3">
+                        No End Date (Ongoing)
+                      </SelectItem>
+                      {[3, 6, 9, 12, 18, 24].map((months) => (
+                        <SelectItem
+                          key={months}
+                          value={months.toString()}
+                          className="text-sm md:text-base py-2 md:py-3"
+                        >
+                          {months} months
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
             </CardHeader>
 
             <CardContent className="space-y-6 md:space-y-8 p-4 md:p-6">
-              {!showCheckout ? (
-                <>
-                  {/* Preset Amounts */}
-                  <div className="space-y-3 md:space-y-4">
-                    <Label className="text-sm md:text-base font-medium">Select an amount</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-                      {presetAmounts.map((amount) => (
-                        <button
-                          key={amount}
-                          onClick={() => handleAmountSelect(amount)}
-                          className={`py-3 md:py-4 px-3 md:px-4 rounded-lg border-2 font-semibold text-base md:text-lg transition-all ${
-                            selectedAmount === amount
-                              ? "border-primary bg-primary text-primary-foreground shadow-md scale-105"
-                              : "border-border bg-card hover:border-primary/50 hover:bg-muted"
-                          }`}
-                        >
-                          ${amount}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              {/* Preset Amounts */}
+              <div className="space-y-3 md:space-y-4">
+                <Label className="text-sm md:text-base font-medium">Select an amount</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+                  {presetAmounts.map((amount) => (
+                    <button
+                      key={amount}
+                      onClick={() => handleAmountSelect(amount)}
+                      className={`py-3 md:py-4 px-3 md:px-4 rounded-lg border-2 font-semibold text-base md:text-lg transition-all ${
+                        selectedAmount === amount
+                          ? "border-primary bg-primary text-primary-foreground shadow-md scale-105"
+                          : "border-border bg-card hover:border-primary/50 hover:bg-muted"
+                      }`}
+                    >
+                      ${amount}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-                  {/* Custom Amount */}
-                  <div className="space-y-2 md:space-y-3">
-                    <Label htmlFor="custom-amount" className="text-sm md:text-base font-medium">
-                      Or enter a custom amount
-                    </Label>
-                    <div className="relative">
-                      <span className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-base md:text-lg font-semibold text-muted-foreground">
-                        $
-                      </span>
+              {/* Custom Amount */}
+              <div className="space-y-2 md:space-y-3">
+                <Label htmlFor="custom-amount" className="text-sm md:text-base font-medium">
+                  Or enter a custom amount
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-base md:text-lg font-semibold text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    id="custom-amount"
+                    type="number"
+                    placeholder="Enter amount"
+                    value={customAmount}
+                    onChange={(e) => handleCustomAmountChange(e.target.value)}
+                    className="pl-7 md:pl-8 h-12 md:h-14 text-base md:text-lg border-2"
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              {/* Donation Summary */}
+              {(selectedAmount || customAmount) && (
+                <div className="p-3 md:p-4 bg-muted rounded-lg border border-border space-y-2">
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-sm md:text-base text-muted-foreground">
+                      {donationType === "monthly" ? "Monthly donation" : "One-time donation"}
+                    </span>
+                    <span className="text-xl md:text-2xl font-bold text-foreground">${totalAmount.toFixed(2)}</span>
+                  </div>
+                  {donationType === "one-time" && installmentMonths > 0 && (
+                    <div className="pt-2 border-t border-border">
+                      <div className="flex justify-between items-center gap-2 text-xs md:text-sm">
+                        <span className="text-muted-foreground">{installmentMonths} monthly payments of</span>
+                        <span className="text-base md:text-lg font-semibold text-primary whitespace-nowrap">
+                          ${monthlyInstallment.toFixed(2)}/mo
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {donationType === "monthly" && monthlyEndDate > 0 && (
+                    <div className="pt-2 border-t border-border">
+                      <div className="flex justify-between items-center gap-2 text-xs md:text-sm">
+                        <span className="text-muted-foreground">Total over {monthlyEndDate} months</span>
+                        <span className="text-base md:text-lg font-semibold text-primary whitespace-nowrap">
+                          ${(totalAmount * monthlyEndDate).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Donor Information - Always visible when amount is selected */}
+              {(selectedAmount || customAmount) && (
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="text-lg font-semibold">Your Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="donor-name">Full Name *</Label>
                       <Input
-                        id="custom-amount"
-                        type="number"
-                        placeholder="Enter amount"
-                        value={customAmount}
-                        onChange={(e) => handleCustomAmountChange(e.target.value)}
-                        className="pl-7 md:pl-8 h-12 md:h-14 text-base md:text-lg border-2"
-                        min="1"
+                        id="donor-name"
+                        type="text"
+                        placeholder="Jane Doe"
+                        value={donorName}
+                        onChange={(e) => setDonorName(e.target.value)}
+                        className="mt-1"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="donor-email">Email Address *</Label>
+                      <Input
+                        id="donor-email"
+                        type="email"
+                        placeholder="jane.doe@example.com"
+                        value={donorEmail}
+                        onChange={(e) => setDonorEmail(e.target.value)}
+                        className="mt-1"
+                        required
                       />
                     </div>
                   </div>
+                </div>
+              )}
 
-                  {/* Donation Summary */}
-                  {(selectedAmount || customAmount) && (
-                    <div className="p-3 md:p-4 bg-muted rounded-lg border border-border space-y-2">
-                      <div className="flex justify-between items-center gap-2">
-                        <span className="text-sm md:text-base text-muted-foreground">
-                          {donationType === "monthly" ? "Monthly donation" : "One-time donation"}
-                        </span>
-                        <span className="text-xl md:text-2xl font-bold text-foreground">${totalAmount.toFixed(2)}</span>
-                      </div>
-                      {donationType === "one-time" && installmentMonths > 0 && (
-                        <div className="pt-2 border-t border-border">
-                          <div className="flex justify-between items-center gap-2 text-xs md:text-sm">
-                            <span className="text-muted-foreground">{installmentMonths} monthly payments of</span>
-                            <span className="text-base md:text-lg font-semibold text-primary whitespace-nowrap">
-                              ${monthlyInstallment.toFixed(2)}/mo
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      {donationType === "monthly" && monthlyEndDate > 0 && (
-                        <div className="pt-2 border-t border-border">
-                          <div className="flex justify-between items-center gap-2 text-xs md:text-sm">
-                            <span className="text-muted-foreground">Total over {monthlyEndDate} months</span>
-                            <span className="text-base md:text-lg font-semibold text-primary whitespace-nowrap">
-                              ${(totalAmount * monthlyEndDate).toFixed(2)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Continue to Payment Button */}
-                  <Button
-                    size="lg"
-                    className="w-full h-12 md:h-14 text-base md:text-lg font-semibold"
-                    disabled={!selectedAmount && !customAmount}
-                    onClick={handleStartCheckout}
-                  >
-                    Continue to Payment
-                  </Button>
-                </>
-              ) : (
-                /* Payment Element Section */
-                clientSecret && (
+              {/* Payment Section - Appears inline when checkout is started */}
+              {checkoutStarted && clientSecret && (
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">Payment Details</h3>
                   <Elements stripe={stripePromise} options={options}>
                     <CheckoutForm
                       amount={totalAmount}
@@ -446,7 +470,19 @@ export default function DonationPage() {
                       onError={handlePaymentError}
                     />
                   </Elements>
-                )
+                </div>
+              )}
+
+              {/* Continue to Payment Button */}
+              {!checkoutStarted && (selectedAmount || customAmount) && (
+                <Button
+                  size="lg"
+                  className="w-full h-12 md:h-14 text-base md:text-lg font-semibold"
+                  disabled={!donorName.trim() || !donorEmail.trim()}
+                  onClick={handleStartCheckout}
+                >
+                  Continue to Payment
+                </Button>
               )}
 
               {/* Footer Text */}
