@@ -299,7 +299,7 @@ export default function DonationPage() {
                     value={installmentMonths.toString()}
                     onValueChange={(value) => setInstallmentMonths(Number.parseInt(value))}
                   >
-                    <SelectTrigger className="h-11 md:h-12 text-sm md:text-base bg-muted border-muted hover:bg-muted/80 transition-colors">
+                    <SelectTrigger className="w-full h-11 md:h-12 text-sm md:text-base bg-muted border-muted hover:bg-muted/80 transition-colors">
                       <SelectValue placeholder="No Installments" />
                     </SelectTrigger>
                     <SelectContent>
@@ -330,7 +330,7 @@ export default function DonationPage() {
                     value={monthlyEndDate.toString()}
                     onValueChange={(value) => setMonthlyEndDate(Number.parseInt(value))}
                   >
-                    <SelectTrigger className="h-11 md:h-12 text-sm md:text-base bg-muted border-muted hover:bg-muted/80 transition-colors">
+                    <SelectTrigger className="w-full h-11 md:h-12 text-sm md:text-base bg-muted border-muted hover:bg-muted/80 transition-colors">
                       <SelectValue placeholder="No End Date" />
                     </SelectTrigger>
                     <SelectContent>
