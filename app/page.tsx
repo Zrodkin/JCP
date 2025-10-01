@@ -54,18 +54,22 @@ function CheckoutForm({
     setMessage("")
 
     // Confirm the payment - this will redirect to success page
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/donation/success`,
-      },
-    })
+    const { error, paymentIntent } = await stripe.confirmPayment({
+  elements,
+  confirmParams: {
+    return_url: `${window.location.origin}/donation/success`,
+  },
+  redirect: "if_required"  // <-- ADD THIS
+})
 
-    if (error) {
-      setMessage(error.message || "An error occurred")
-      onError(error.message || "Payment failed")
-      setIsProcessing(false)
-    }
+if (error) {
+  setMessage(error.message || "An error occurred")
+  onError(error.message || "Payment failed")
+  setIsProcessing(false)
+} else if (paymentIntent && paymentIntent.status === "succeeded") {  // <-- ADD THIS
+  onSuccess()  // <-- This triggers your in-page success screen
+  setIsProcessing(false)
+}
     // If no error, the redirect will happen automatically
   }
 
@@ -290,7 +294,7 @@ export default function DonationPage() {
 
               {donationType === "one-time" && (
                 <div className="space-y-2 px-1 md:px-0">
-                  <Label className="text-sm font-medium text-muted-foreground">Installment Plan (Optional)</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">Installment Plan </Label>
                   <Select
                     value={installmentMonths.toString()}
                     onValueChange={(value) => setInstallmentMonths(Number.parseInt(value))}
@@ -321,7 +325,7 @@ export default function DonationPage() {
 
               {donationType === "monthly" && (
                 <div className="space-y-2 px-1 md:px-0">
-                  <Label className="text-sm font-medium text-muted-foreground">Donation Duration (Optional)</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">Donation Duration</Label>
                   <Select
                     value={monthlyEndDate.toString()}
                     onValueChange={(value) => setMonthlyEndDate(Number.parseInt(value))}
@@ -331,9 +335,9 @@ export default function DonationPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="0" className="text-sm md:text-base py-2 md:py-3">
-                        No End Date (Ongoing)
+                        no end date:
                       </SelectItem>
-                      {[3, 6, 9, 12, 18, 24].map((months) => (
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((months) => (
                         <SelectItem
                           key={months}
                           value={months.toString()}
@@ -432,7 +436,7 @@ export default function DonationPage() {
                       <Input
                         id="donor-name"
                         type="text"
-                        placeholder="Jane Doe"
+                        placeholder=""
                         value={donorName}
                         onChange={(e) => setDonorName(e.target.value)}
                         className="mt-1"
@@ -444,7 +448,7 @@ export default function DonationPage() {
                       <Input
                         id="donor-email"
                         type="email"
-                        placeholder="jane.doe@example.com"
+                        placeholder=""
                         value={donorEmail}
                         onChange={(e) => setDonorEmail(e.target.value)}
                         className="mt-1"
