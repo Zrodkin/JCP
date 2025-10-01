@@ -293,7 +293,7 @@ export default function DonationPage() {
               </div>
 
               {donationType === "one-time" && (
-                <div className="space-y-2 px-1 md:px-0">
+                <div className="space-y-2 md:px-0">
                   <Label className="text-sm font-medium text-muted-foreground">Installment Plan </Label>
                   <Select
                     value={installmentMonths.toString()}
@@ -324,7 +324,7 @@ export default function DonationPage() {
               )}
 
               {donationType === "monthly" && (
-                <div className="space-y-2 px-1 md:px-0">
+                <div className="space-y-2">
                   <Label className="text-sm font-medium text-muted-foreground">Donation Duration</Label>
                   <Select
                     value={monthlyEndDate.toString()}
